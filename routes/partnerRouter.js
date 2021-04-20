@@ -1,45 +1,90 @@
-const express = require('express');
-const partnerRouter = express.Router();
+const express = require("express")
+const Partner = require("../models/partner")
 
-partnerRouter.route('/')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
-})
-.get((req, res) => {
-    res.end('Will send all the partners to you');
-})
-.post((req, res) => {
-    res.end(`Will add the partner: ${req.body.name} with description: ${req.body.description}`);
-})
-.put((req, res) => {
-    res.statusCode = 403;
-    res.end('PUT operation not supported on /partners');
-})
-.delete((req, res) => {
-    res.end('Deleting all partners');
-});
+const partnerRouter = express.Router()
 
+partnerRouter.route("/")
 
-partnerRouter.route('/:partnerId')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
-})
-.get((req, res) => {
-    res.end(`Will send you a partner ${req.params.partnerId}`);
-})
-.post((req, res) => {
-    res.end(`Will add details to partner: ${req.params.partnerId}`);
-})
-.put((req, res) => {
-    res.statusCode = 403;
-    res.end(`Updating the partner: ${req.params.partnerId} Will update the partner: ${req.body.name}, with: ${req.body.description}`);
-})
-.delete((req, res) => { 
-    res.end(`Deleting ${req.params.partnerId}`);
-});
+//* ENDPOINTS
 
-module.exports = partnerRouter;
+.get((req,res, next)=>{
+   
+    Partner.find()
+    .then(partners=>{
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        //res.json will send this information to the client no need to use res.end
+        res.json(partners)
+    })
+    //this allows express to handle the error if there is one
+    .catch(err => next(err))
+})
+
+.post((req,res, next)=>
+{
+    //mongoose will already check this to make sure it matches the schema we defined
+    Partner.create(req.body)
+    .then(partner=>{
+        console.log("partner Created", partner);
+        res.statusCode= 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+    })
+    .catch(err => next(err))
+})
+
+//we can leave this as is because put is not an allowed operation on /partners
+.put((req,res)=>{
+    res.statusCode = 403; 
+    res.end("PUT operation not supported on /partners")
+})
+
+.delete((req,res, next)=>{
+    Partner.deleteMany()
+    .then(response => {
+        res.statusCode= 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(response)
+    })
+    .catch(err => next(err))
+})
+
+partnerRouter.route(`/:partnerId`)
+
+.get((req,res, next)=>{
+    Partner.findById(req.params.partnerId)
+    .then(partner=>{
+        console.log("partner Created", partner);
+        res.statusCode= 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+    })
+    .catch(err => next(err))
+})
+
+.post((req,res)=>
+{
+    res.end(`POST operation not supported on /partners/${req.params.partnerId}`)
+})
+
+.put((req,res, next)=>{
+    Partner.findByIdAndUpdate(req.params.partnerId, {$set: req.body}, {new: true})
+    .then(partner =>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(partner)
+    }) 
+    .catch(err => next(err))
+})
+
+.delete((req,res, next)=>{
+    Partner.findByIdAndDelete(req.params.partnerId)
+    .then(response =>{
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        res.json(response)
+    }) 
+    .catch(err => next(err))
+})
+
+module.exports = partnerRouter
