@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const passport = require('passport');
+const authenticate = require('./authenticate');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
@@ -49,6 +51,9 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Placed here so all users can access the index page
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -56,22 +61,15 @@ app.use('/users', usersRouter);
 
 //Basic authorization
 function auth(req, res, next) {
-  console.log(req.session);
+  console.log(req.user);
 
   // Removed signedCookies with session since we arent using cookieParser anymore
-  if (!req.session.user) { 
+  if (!req.user) { 
       const err = new Error('You are not authenticated!');
       err.status = 401;
       return next(err);
   } else {
-    // Removed signedCookies with session since we arent using cookieParser anymore
-    if (req.session.user === 'authenticated') {
       return next();
-    } else {
-      const err = new Error('You are not authenticated');
-      err.status = 401;
-      return next();
-    }
   }
 }
 
