@@ -1,5 +1,6 @@
-const express = require("express")
-const Promotion = require("../models/promotion")
+const express = require("express");
+const Promotion = require("../models/promotion");
+const authenticate = require("../authenticate");
 
 const promotionRouter = express.Router()
 
@@ -19,7 +20,7 @@ promotionRouter.route("/")
     .catch(err => next(err))
 })
 
-.post((req,res, next)=>
+.post(authenticate.verifyUser, (req,res, next)=>
 {
     //mongoose will already check this to make sure it matches the schema we defined
     Promotion.create(req.body)
@@ -33,12 +34,12 @@ promotionRouter.route("/")
 })
 
 //we can leave this as is because put is not an allowed operation on /promotions
-.put((req,res)=>{
+.put(authenticate.verifyUser, (req,res)=>{
     res.statusCode = 403; 
     res.end("PUT operation not supported on /promotions")
 })
 
-.delete((req,res, next)=>{
+.delete(authenticate.verifyUser, (req,res, next)=>{
     Promotion.deleteMany()
     .then(response => {
         res.statusCode= 200
@@ -47,6 +48,7 @@ promotionRouter.route("/")
     })
     .catch(err => next(err))
 })
+
 
 promotionRouter.route(`/:promotionId`)
 .get((req,res, next)=>{
@@ -60,12 +62,12 @@ promotionRouter.route(`/:promotionId`)
     .catch(err => next(err))
 })
 
-.post((req,res)=>
+.post(authenticate.verifyUser, (req,res)=>
 {
     res.end(`POST operation not supported on /promotions/${req.params.promotionId}`)
 })
 
-.put((req,res, next)=>{
+.put(authenticate.verifyUser, (req,res, next)=>{
     Promotion.findByIdAndUpdate(req.params.promotionId, {$set: req.body}, {new: true})
     .then(promotion =>{
         res.statusCode = 200
@@ -75,7 +77,7 @@ promotionRouter.route(`/:promotionId`)
     .catch(err => next(err))
 })
 
-.delete((req,res, next)=>{
+.delete(authenticate.verifyUser, (req,res, next)=>{
     Promotion.findByIdAndDelete(req.params.promotionId)
     .then(response =>{
         res.statusCode = 200
