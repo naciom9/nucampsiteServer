@@ -2,7 +2,7 @@ const express = require('express')
 const Campsite = require('../models/campsite')
 const authenticate = require('../authenticate')
 
-const campsiteRouter = express.Router()
+const campsiteRouter = express.Router();
 
 campsiteRouter.route('/')
 //* ENDPOINTS
