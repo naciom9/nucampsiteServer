@@ -6,8 +6,17 @@ const authenticate = require('../authenticate')
 const router = express.Router()
 
 /* GET users listing. */
-router.get('/', function (req, res, next) {
-  res.send('respond with a resource')
+router.get('/', authenticate.verifyUser, authenticate.verifyAdmin,
+function (req, res, next) {
+  return User.find()
+    .then(users => {
+        res.statusCode = 200
+        res.setHeader('Content-Type', 'application/json')
+        //res.json will send this information to the client no need to use res.end
+        res.json(users)
+    })
+    //this allows express to handle the error if there is one
+    .catch(err => next(err))
 })
 
 router.post('/signup', (req, res) => {
